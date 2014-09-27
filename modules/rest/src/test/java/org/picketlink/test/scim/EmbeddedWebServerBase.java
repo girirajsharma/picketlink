@@ -17,14 +17,19 @@
  */
 package org.picketlink.test.scim;
 
+import java.net.URL;
+
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.bio.SocketConnector;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.FilterMapping;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import org.junit.After;
 import org.junit.Before;
+import org.picketlink.scim.PicketLinkSCIMApplication;
 
 /**
  * Base class for embedded web server based tests
@@ -32,7 +37,7 @@ import org.junit.Before;
  * @author Anil Saldhana
  * @since Jul 8, 2009
  */
-public abstract class EmbeddedWebServerBase {
+public class EmbeddedWebServerBase {
     protected Server server = null;
 
     @Before
@@ -74,7 +79,38 @@ public abstract class EmbeddedWebServerBase {
     /**
      * Establish the user applications - context, servlets etc
      */
-    protected abstract void establishUserApps();
+    protected void establishUserApps() {
+        ClassLoader tcl = Thread.currentThread().getContextClassLoader();
+        if (tcl == null) {
+            tcl = getClass().getClassLoader();
+        }
+
+        final String WEBAPPDIR = "scim";
+
+        final String CONTEXTPATH = "/*";
+
+        // for localhost:port/admin/index.html and whatever else is in the webapp directory
+        final URL warUrl = tcl.getResource(WEBAPPDIR);
+        final String warUrlString = warUrl.toExternalForm();
+
+        WebAppContext context = createWebApp(CONTEXTPATH, warUrlString);
+        context.setClassLoader(getClass().getClassLoader());
+        context.setExtraClasspath(warUrlString + "/..");
+
+        context.setConfigurationClasses(new String[] { "org.eclipse.jetty.webapp.WebInfConfiguration",
+                "org.eclipse.jetty.webapp.WebXmlConfiguration", "org.eclipse.jetty.webapp.MetaInfConfiguration",
+                "org.eclipse.jetty.webapp.FragmentConfiguration", "org.eclipse.jetty.plus.webapp.EnvConfiguration",
+                //"org.eclipse.jetty.plus.webapp.PlusConfiguration",
+                "org.eclipse.jetty.webapp.JettyWebXmlConfiguration", "org.eclipse.jetty.webapp.TagLibConfiguration" });
+
+        context.setContextPath("/");
+
+        ServletHolder servletHolder = new ServletHolder(new HttpServletDispatcher());
+        servletHolder.setInitParameter("javax.ws.rs.Application", PicketLinkSCIMApplication.class.getName());
+        context.addServlet(servletHolder, "/*");
+
+        server.setHandler(context);
+    }
 
     protected FilterMapping createFilterMapping(String pathSpec, FilterHolder filterHolder) {
         FilterMapping filterMapping = new FilterMapping();

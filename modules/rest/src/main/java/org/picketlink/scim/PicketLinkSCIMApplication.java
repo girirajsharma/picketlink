@@ -17,12 +17,15 @@
  */
 package org.picketlink.scim;
 
-import org.picketlink.scim.endpoints.GroupsEndpoint;
-import org.picketlink.scim.endpoints.UsersEndpoint;
-
-import javax.ws.rs.core.Application;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.ws.rs.core.Application;
+
+import org.picketlink.scim.restful.server.resources.group.GroupResource;
+import org.picketlink.scim.restful.server.resources.group.GroupsResource;
+import org.picketlink.scim.restful.server.resources.user.UserResource;
+import org.picketlink.scim.restful.server.resources.user.UsersResource;
 
 /**
  * JAX-RS Application
@@ -36,8 +39,10 @@ public class PicketLinkSCIMApplication extends Application {
 
     public PicketLinkSCIMApplication() {
         // initialize restful services
-        services.add(new UsersEndpoint());
-        services.add(new GroupsEndpoint());
+        services.add(new UserResource());
+        services.add(new UsersResource());
+        services.add(new GroupResource());
+        services.add(new GroupsResource());
     }
 
     @Override
