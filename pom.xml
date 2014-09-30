@@ -368,6 +368,8 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${version.surefire.plugin}</version>
           <configuration>
+            <parallel>classes</parallel>
+            <threadCount>100</threadCount>
             <printSummary>true</printSummary>
             <disableXmlReport>false</disableXmlReport>
             <testFailureIgnore>false</testFailureIgnore>
